@@ -1,4 +1,4 @@
-package app.grapheneos.pdfviewer.test;
+package com.waxd.pdfviewer.test;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
