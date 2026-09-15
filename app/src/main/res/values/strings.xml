@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Waxd PDF Viewer</string>
+    <!--<string name="action_settings">Settings</string>-->
+    <string name="action_previous">Previous page</string>
+    <string name="action_next">Next page</string>
+    <string name="action_open">Open document</string>
+    <string name="action_first">First page</string>
+    <string name="action_last">Last page</string>
+    <string name="action_jump_to_page">Jump to page</string>
+    <string name="action_rotate_clockwise">Rotate clockwise</string>
+    <string name="action_rotate_counterclockwise">Rotate counterclockwise</string>
+    <string name="action_share">Share</string>
+    <string name="action_save_as">Save as</string>
+    <string name="action_outline">Outline</string>
+    <string name="action_view_document_properties">Properties</string>
+    <string name="action_close">Close</string>
+
+    <string name="outline_child_button_description">View nested outline entries</string>
+    <string name="outline_not_available">No outline available</string>
+
+    <string name="debug_action_toggle_text_layer_visibility">Toggle text layer visibility</string>
+    <string name="debug_action_crash_webview">Crash WebView</string>
+
+    <string name="document_properties_invalid_date">Invalid date</string>
+    <string name="document_properties_retrieval_failed">Failed to obtain document metadata</string>
+
+    <string name="invalid_mime_type">Cannot open file with invalid MIME type</string>
+    <string name="legacy_file_uri">Cannot open legacy file paths from insecure apps</string>
+    <string name="error_while_opening">Error encountered while opening file</string>
+    <string name="error_while_saving">Error encountered while saving file</string>
+
+    <string name="webview_out_of_date_title">WebView out-of-date</string>
+    <string name="webview_out_of_date_message" tools:ignore="PluralsCandidate">Your current WebView version is %1$d. The WebView should be at least version %2$d for the PDF Viewer to work.</string>
+
+    <string name="webview_crash_title">WebView crashed</string>
+    <string name="webview_crash_message">Android WebView render process crashed.</string>
+
+    <string name="reload">Reload</string>
+
+    <string name="password_prompt_hint">Password</string>
+    <string name="password_prompt_description">Enter the password to decrypt this PDF file</string>
+    <string name="invalid_password">Invalid password</string>
+    <string name="open">Open</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="file_name">File name</string>
+    <string name="file_size">File size</string>
+    <string name="title">Title</string>
+    <string name="author">Author</string>
+    <string name="subject">Subject</string>
+    <string name="keywords">Keywords</string>
+    <string name="creation_date">Creation date</string>
+    <string name="modify_date">Modify date</string>
+    <string name="producer">Producer</string>
+    <string name="creator">Creator</string>
+    <string name="pdf_version">PDF version</string>
+    <string name="pages">Pages</string>
+
+    <string name="zoom">Zoom</string>
+    <string name="zoom_in">Zoom in</string>
+    <string name="zoom_out">Zoom out</string>
+    <string name="zoom_range">Percentage (%1$d–%2$d%%)</string>
+
+    <string name="unknown_file_size">Unknown</string>
+</resources>

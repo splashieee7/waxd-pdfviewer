@@ -1,0 +1,18 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/waxd_primary</item>
+        <item name="colorOnPrimary">@color/waxd_background</item>
+        <item name="colorSecondary">@color/waxd_accent</item>
+        <item name="colorOnSecondary">@color/waxd_background</item>
+        <item name="colorSurface">@color/waxd_background</item>
+        <item name="colorOnSurface">@color/waxd_text</item>
+        <item name="android:colorBackground">@color/waxd_background</item>
+        <item name="colorOnBackground">@color/waxd_text</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar" tools:ignore="NewApi">false</item>
+    </style>
+
+</resources>

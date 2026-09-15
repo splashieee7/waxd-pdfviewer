@@ -1,0 +1,13 @@
+*.iml
+.gradle
+local.properties
+build/
+keystore.properties
+*.keystore
+/.idea
+/releases
+/node_modules
+/app/src/*/assets/viewer
+
+*.jks
+.keystore_secrets.txt

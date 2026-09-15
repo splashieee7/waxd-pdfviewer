@@ -1,0 +1,205 @@
+package com.waxd.pdfviewer.test
+
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.waxd.pdfviewer.PdfViewer
+import com.waxd.pdfviewer.testrules.RetryRules
+import com.waxd.pdfviewer.RetryableComposeRule
+import com.waxd.pdfviewer.testrules.OrientationRules
+import com.waxd.pdfviewer.util.PdfViewerLauncher
+import com.waxd.pdfviewer.util.PdfViewerRobot
+import com.waxd.pdfviewer.util.PdfViewerTestUtils
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.runner.RunWith
+import kotlin.math.abs
+
+/**
+ * Edge-to-edge rendering and inset geometry checks.
+ */
+@RunWith(AndroidJUnit4::class)
+class PdfViewerEdgeToEdgeTest {
+
+    private val composeRule = RetryableComposeRule()
+
+    @get:Rule
+    val rules: RuleChain = RuleChain
+        .outerRule(RetryRules())
+        .around(OrientationRules())
+        .around(composeRule)
+
+    private val robot = PdfViewerRobot(composeRule)
+
+    @Before
+    fun setup() {
+        PdfViewerTestUtils.init(composeRule)
+    }
+
+    private data class EdgeInsets(
+        val left: Float,
+        val top: Float,
+        val right: Float,
+        val bottom: Float
+    )
+
+    @Test
+    fun edgeToEdgeBridge_reportsAndroidInsets() {
+        PdfViewerLauncher.launchWithTestAsset("test-simple.pdf").use { scenario ->
+            PdfViewerTestUtils.waitForDocumentFullyLoaded(scenario)
+            PdfViewerTestUtils.waitForCanvasRendered(scenario)
+
+            PdfViewerTestUtils.pollUntil(
+                timeout = 5_000,
+                description = {
+                    "JS bridge insets should match Android layout/window insets " +
+                            "(expected=${getExpectedInsets(scenario)}, " +
+                            "actual=${getChannelInsets(scenario)})"
+                }
+            ) {
+                insetsMatch(getExpectedInsets(scenario), getChannelInsets(scenario))
+            }
+
+            val expected = getExpectedInsets(scenario)
+            val actual = getChannelInsets(scenario)
+            assertTrue("Expected visible app bar top inset > 0", expected.top > 0f)
+            assertInsetsMatch("JS bridge insets", expected, actual)
+        }
+    }
+
+    @Test
+    fun edgeToEdgeCanvasPadding_matchesBridgeInsets() {
+        PdfViewerLauncher.launchWithTestAsset("test-simple.pdf").use { scenario ->
+            PdfViewerTestUtils.waitForDocumentFullyLoaded(scenario)
+            PdfViewerTestUtils.waitForCanvasRendered(scenario)
+
+            PdfViewerTestUtils.pollUntil(
+                timeout = 5_000,
+                description = {
+                    "Canvas padding should match JS bridge insets " +
+                            "(expected=${getChannelInsets(scenario)}, " +
+                            "actual=${getCanvasPaddingInDevicePixels(scenario)})"
+                }
+            ) {
+                insetsMatch(
+                    getChannelInsets(scenario),
+                    getCanvasPaddingInDevicePixels(scenario)
+                )
+            }
+
+            assertInsetsMatch(
+                "Canvas padding",
+                getChannelInsets(scenario),
+                getCanvasPaddingInDevicePixels(scenario)
+            )
+        }
+    }
+
+    @Test
+    fun toolbarToggle_preservesTextLayerAlignment() {
+        PdfViewerLauncher.launchWithTestAsset("test-simple.pdf").use { scenario ->
+            PdfViewerTestUtils.waitForDocumentFullyLoaded(scenario)
+            PdfViewerTestUtils.waitForCanvasRendered(scenario)
+            PdfViewerTestUtils.assertTextLayerContent(scenario, "Test Text")
+            robot.assertTextLayerAligned(scenario)
+
+            robot.tapWebView()
+            PdfViewerTestUtils.waitForToolbarState(scenario, visible = false)
+            PdfViewerTestUtils.assertTextLayerContent(scenario, "Test Text")
+            robot.assertTextLayerAligned(scenario)
+
+            robot.tapWebView()
+            PdfViewerTestUtils.waitForToolbarState(scenario, visible = true)
+            PdfViewerTestUtils.assertTextLayerContent(scenario, "Test Text")
+            robot.assertTextLayerAligned(scenario)
+        }
+    }
+
+    private fun getExpectedInsets(
+        scenario: ActivityScenario<PdfViewer>
+    ): EdgeInsets {
+        var result: EdgeInsets? = null
+        scenario.onActivity { activity ->
+            val webView = activity.webView ?: return@onActivity
+            val insetTypes = WindowInsetsCompat.Type.systemBars() or
+                    WindowInsetsCompat.Type.displayCutout()
+            val insets = ViewCompat.getRootWindowInsets(webView)?.getInsets(insetTypes)
+
+            result = EdgeInsets(
+                left = (insets?.left ?: 0).toFloat(),
+                top = activity.viewModel.insetTop,
+                right = (insets?.right ?: 0).toFloat(),
+                bottom = (insets?.bottom ?: 0).toFloat()
+            )
+        }
+        return result ?: EdgeInsets(0f, 0f, 0f, 0f)
+    }
+
+    private fun getChannelInsets(
+        scenario: ActivityScenario<PdfViewer>
+    ) = EdgeInsets(
+        left = PdfViewerTestUtils.evaluateJs(
+            scenario, "channel.getInsetLeft()"
+        ).toFloat(),
+        top = PdfViewerTestUtils.evaluateJs(
+            scenario, "channel.getInsetTop()"
+        ).toFloat(),
+        right = PdfViewerTestUtils.evaluateJs(
+            scenario, "channel.getInsetRight()"
+        ).toFloat(),
+        bottom = PdfViewerTestUtils.evaluateJs(
+            scenario, "channel.getInsetBottom()"
+        ).toFloat()
+    )
+
+    private fun getCanvasPaddingInDevicePixels(
+        scenario: ActivityScenario<PdfViewer>
+    ) = EdgeInsets(
+        left = evaluateCanvasPaddingInDevicePixels(scenario, "paddingLeft"),
+        top = evaluateCanvasPaddingInDevicePixels(scenario, "paddingTop"),
+        right = evaluateCanvasPaddingInDevicePixels(scenario, "paddingRight"),
+        bottom = evaluateCanvasPaddingInDevicePixels(scenario, "paddingBottom")
+    )
+
+    private fun evaluateCanvasPaddingInDevicePixels(
+        scenario: ActivityScenario<PdfViewer>,
+        propertyName: String
+    ): Float {
+        return PdfViewerTestUtils.evaluateJs(
+            scenario,
+            """
+                (function() {
+                    const canvas = document.getElementById('content');
+                    const value = parseFloat(getComputedStyle(canvas)['$propertyName']) || 0;
+                    return value * globalThis.devicePixelRatio;
+                })()
+            """.trimIndent()
+        ).toFloat()
+    }
+
+    private fun assertInsetsMatch(
+        label: String,
+        expected: EdgeInsets,
+        actual: EdgeInsets
+    ) {
+        assertTrue(
+            "$label should match expected=$expected actual=$actual",
+            insetsMatch(expected, actual)
+        )
+    }
+
+    private fun insetsMatch(expected: EdgeInsets, actual: EdgeInsets): Boolean {
+        return abs(expected.left - actual.left) <= INSET_TOLERANCE_PX &&
+                abs(expected.top - actual.top) <= INSET_TOLERANCE_PX &&
+                abs(expected.right - actual.right) <= INSET_TOLERANCE_PX &&
+                abs(expected.bottom - actual.bottom) <= INSET_TOLERANCE_PX
+    }
+
+    private companion object {
+        const val INSET_TOLERANCE_PX = 1.5f
+    }
+}
